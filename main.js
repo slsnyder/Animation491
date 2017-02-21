@@ -10,8 +10,12 @@ function Animation(spriteSheet, frameWidth, frameHeight, xInit, yInit, sheetWidt
     this.sheetWidth = sheetWidth;
     this.frameDuration = frameDuration;
     this.frames = frames;
-    this.totalTime = frameDuration * frames;
+    if (loop === 2) this.totalTime = frameDuration * (frames - 1) * 2;
+    else this.totalTime = frameDuration * frames;
     this.elapsedTime = 0;
+    
+    // 0 for no loop, 1 for iterative loop, 2 for ping-pong loop
+    // 0 currently bugged
     this.loop = loop;
     this.scale = scale;
 }
@@ -19,7 +23,7 @@ function Animation(spriteSheet, frameWidth, frameHeight, xInit, yInit, sheetWidt
 Animation.prototype.drawFrame = function (tick, ctx, x, y) {
     this.elapsedTime += tick;
     if (this.isDone()) {
-        if (this.loop) this.elapsedTime = 0;
+        if (this.loop != 0) this.elapsedTime = 0;
     }
     var frame = this.currentFrame();
     var xindex = 0;
@@ -37,7 +41,11 @@ Animation.prototype.drawFrame = function (tick, ctx, x, y) {
 }
 
 Animation.prototype.currentFrame = function () {
-    return Math.floor(this.elapsedTime / this.frameDuration);
+    var current = Math.floor(this.elapsedTime / this.frameDuration);
+    if (this.loop === 2 && current >= this.frames) {
+        current = this.frames + Math.floor(this.frames / 2) - current;
+    }
+    return current;
 }
 
 Animation.prototype.isDone = function () {
@@ -63,7 +71,7 @@ Background.prototype.update = function () {
 
 // inheritance 
 function Sprite(game, spritesheet) {
-    this.animation = new Animation(spritesheet, 67, 100, 0, 0, 6, 0.2, 6, true, 1);
+    this.animation = new Animation(spritesheet, 67, 100, 0, 0, 6, 0.2, 6, 1, 1);
     this.xSpeed = 0;
     this.ySpeed = 0;
     this.ctx = game.ctx;
@@ -88,7 +96,7 @@ Sprite.prototype.draw = function () {
 
 // inheritance 
 function CC(game, spritesheet) {
-    this.animation = new Animation(spritesheet, 32, 32, 96, 0, 3, 0.15, 3, true, 2);
+    this.animation = new Animation(spritesheet, 32, 32, 96, 0, 3, 0.5, 3, 2, 2);
     this.xSpeed = 0;
     this.ySpeed = 64;
     this.ctx = game.ctx;
@@ -113,7 +121,7 @@ CC.prototype.draw = function () {
 
 // inheritance 
 function Glitch(game, spritesheet) {
-    this.animation = new Animation(spritesheet, 43, 43, 43, 86, 8, .15, 8, true, 2);
+    this.animation = new Animation(spritesheet, 43, 43, 43, 86, 8, 0.15, 8, 1, 2);
     this.xSpeed = 128;
     this.ySpeed = 0;
     this.ctx = game.ctx;
