@@ -70,26 +70,26 @@ Background.prototype.update = function () {
 };
 
 // inheritance 
-function Sprite(game, spritesheet) {
-    this.animation = new Animation(spritesheet, 67, 100, 0, 0, 6, 0.2, 6, 1, 1);
-    this.xSpeed = 0;
+function Link(game, spritesheet) {
+    this.animation = new Animation(spritesheet, 120, 130, 0, 650, 10, 0.2, 10, 1, 0.5);
+    this.xSpeed = -128;
     this.ySpeed = 0;
     this.ctx = game.ctx;
-    Entity.call(this, game, 0, 450);
+    Entity.call(this, game, 100, 450);
 }
 
-Sprite.prototype = new Entity();
-Sprite.prototype.constructor = Sprite;
+Link.prototype = new Entity();
+Link.prototype.constructor = Link;
 
-Sprite.prototype.update = function () {
+Link.prototype.update = function () {
     this.x += this.game.clockTick * this.xSpeed;
-    if (this.x > 800) this.x = -150;
+    if (this.x < -100) this.x = 900;
     this.y += this.game.clockTick * this.ySpeed;
     if (this.y > 700) this.y = -150;
     Entity.prototype.update.call(this);
 }
 
-Sprite.prototype.draw = function () {
+Link.prototype.draw = function () {
     this.animation.drawFrame(this.game.clockTick, this.ctx, this.x, this.y);
     Entity.prototype.draw.call(this);
 }
@@ -119,35 +119,57 @@ CC.prototype.draw = function () {
     Entity.prototype.draw.call(this);
 }
 
-// inheritance 
+// inheritance
 function Glitch(game, spritesheet) {
     this.animation = new Animation(spritesheet, 43, 43, 43, 86, 8, 0.15, 8, 1, 2);
+    this.jumpAnimation = new Animation(spritesheet, 43, 43, 43, 129, 8, 0.15, 8, 0, 2);
     this.xSpeed = 128;
-    this.ySpeed = 0;
+    this.jumping = false;
     this.ctx = game.ctx;
-    Entity.call(this, game, 100, 100);
+    this.ground = 200;
+    Entity.call(this, game, 0, 200);
 }
 
 Glitch.prototype = new Entity();
 Glitch.prototype.constructor = Glitch;
 
 Glitch.prototype.update = function () {
+    if (this.game.space) this.jumping = true;
+    if (this.jumping) {
+        if (this.jumpAnimation.isDone()) { // BUG HERE
+            this.jumpAnimation.elapsedTime = 0;
+            this.jumping = false;
+        }
+        
+        var jumpDistance = this.jumpAnimation.elapsedTime / this.jumpAnimation.totalTime;
+        var totalHeight = 100;
+
+        if (jumpDistance > 0.5) jumpDistance = 1 - jumpDistance;
+
+        //var height = jumpDistance * 2 * totalHeight;
+        var height = totalHeight*(-4 * (jumpDistance * jumpDistance - jumpDistance));
+        this.y = this.ground - height;
+    }
+    
     this.x += this.game.clockTick * this.xSpeed;
     if (this.x > 800) this.x = -32;
-    this.y += this.game.clockTick * this.ySpeed;
-    if (this.y > 700) this.y = -32;
+    
     Entity.prototype.update.call(this);
 }
 
 Glitch.prototype.draw = function () {
-    this.animation.drawFrame(this.game.clockTick, this.ctx, this.x, this.y);
+    if (this.jumping) {
+        this.jumpAnimation.drawFrame(this.game.clockTick, this.ctx, this.x, this.y);
+    } else {
+        this.animation.drawFrame(this.game.clockTick, this.ctx, this.x, this.y);
+    }
     Entity.prototype.draw.call(this);
 }
 
 
 AM.queueDownload("./img/glitch.png");
 AM.queueDownload("./img/cc.png");
-AM.queueDownload("./img/sprite.png");
+AM.queueDownload("./img/link.png");
 AM.queueDownload("./img/transistorBG.jpg");
 
 AM.downloadAll(function () {
@@ -159,7 +181,7 @@ AM.downloadAll(function () {
     gameEngine.start();
 
     gameEngine.addEntity(new Background(gameEngine, AM.getAsset("./img/transistorBG.jpg")));
-    gameEngine.addEntity(new Sprite(gameEngine, AM.getAsset("./img/sprite.png")));
+    gameEngine.addEntity(new Link(gameEngine, AM.getAsset("./img/link.png")));
     gameEngine.addEntity(new CC(gameEngine, AM.getAsset("./img/cc.png")));
     gameEngine.addEntity(new Glitch(gameEngine, AM.getAsset("./img/glitch.png")));
 
