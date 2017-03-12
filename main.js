@@ -96,7 +96,7 @@ Link.prototype.draw = function () {
 
 // inheritance 
 function CC(game, spritesheet) {
-    this.animation = new Animation(spritesheet, 32, 32, 96, 0, 3, 0.5, 3, 2, 2);
+    this.animation = new Animation(spritesheet, 32, 32, 96, 0, 3, 0.3, 3, 2, 2);
     this.xSpeed = 0;
     this.ySpeed = 64;
     this.ctx = game.ctx;
